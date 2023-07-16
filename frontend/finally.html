@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Drag and Drop Questions</title>
+  <style>
+   body {
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+    }
+
+    .box {
+      width: 100%;
+      height: 450px;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .question {
+      background-color: #f9f9f9;
+      margin-bottom: 10px;
+      cursor: move;
+    }
+
+    .droppable-box {
+      border: 2px dashed #bbb;
+      min-height: 200px;
+      height: 450px; /* Set a fixed height here */
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Drag and Drop Questions</h1>
+  <div class="container">
+    <div class="box" id="questions-box" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <h2>Questions</h2>
+      <div class="question" draggable="true" data-value="5" id="question1">What is Python? (5 points)</div>
+      <div class="question" draggable="true" data-value="10" id="question2">Python is an interpreted language. Explain (10 points)</div>
+      <div class="question" draggable="true" data-value="8" id="question3">What is pep 8? (8 points)</div>
+      <div class="question" draggable="true" data-value="2" id="question4">What are the Key features of Python? (2 points)</div>
+      <div class="question" draggable="true" data-value="5" id="question1">How is Memory managed in Python? (5 points)</div>
+      <div class="question" draggable="true" data-value="10" id="question2">What is PYTHONPATH? (10 points)</div>
+      <div class="question" draggable="true" data-value="8" id="question3">What are Python Modules? (8 points)</div>
+      <div class="question" draggable="true" data-value="2" id="question4"> What are python namespaces? (2 points)</div>
+      <div class="question" draggable="true" data-value="8" id="question3">Explain Inheritance in Python with an example? (8 points)</div>
+      <div class="question" draggable="true" data-value="2" id="question4"> What is a dictionary in Python? (2 points)</div>
+    </div>
+    <div class="box droppable-box" id="drop-box" ondrop="drop(event)" ondragover="allowDrop(event)">
+      <h2>Drop Box</h2>
+    </div>
+  </div>
+  <div>
+    <h2>Total Points: <span id="total-points">0</span></h2>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+  <script>
+    let totalPoints = 0;
+
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+
+    function drop(event) {
+    event.preventDefault();
+    const data = event.dataTransfer.getData("text");
+    const question = document.getElementById(data);
+
+    // Check if the question is being dropped back to the "Questions" box
+    if (event.target.classList.contains("box")) {
+      const currentBox = question.parentNode;
+      const originalBox = document.querySelector('.box:not(.droppable-box)');
+
+      // If the question is moved from the "Drop Box" to "Questions" box
+      if (currentBox.classList.contains("droppable-box") && originalBox !== null) {
+        removePoints(parseInt(question.getAttribute("data-value")));
+        originalBox.appendChild(question);
+      }
+
+      // If the question is moved from one position to another within the "Questions" box, no change in total points
+
+      event.target.appendChild(question);
+      addPoints(parseInt(question.getAttribute("data-value")));
+    } else if (event.target.classList.contains("droppable-box")) {
+      // If the question is dropped on the "Drop Box," add points and update total points
+      event.target.appendChild(question);
+      addPoints(parseInt(question.getAttribute("data-value")));
+    } else {
+      // If the question is being dropped outside the "Drop Box," revert it back to its original position
+      const originalBox = question.parentNode;
+      originalBox.appendChild(question);
+
+      // If the question is removed from the "Drop Box," deduct points and update total points
+      if (originalBox.classList.contains("droppable-box")) {
+        removePoints(parseInt(question.getAttribute("data-value")));
+      }
+    }
+  }
+
+  function addPoints(value) {
+    totalPoints += value;
+    document.getElementById("total-points").textContent = totalPoints;
+  }
+
+  function removePoints(value) {
+    totalPoints -= value;
+    document.getElementById("total-points").textContent = totalPoints;
+  }
+
+  document.addEventListener("dragend", function(event) {
+    event.dataTransfer.setData("text", event.target.id);
+  });
+
+
+    // Initialize Sortable on the "Questions" box and the "Drop Box"
+    Sortable.create(document.getElementById('questions-box'), {
+      group: 'questions',
+      animation: 150,
+      sort: true // To prevent sorting within the "Questions" box
+    });
+
+    Sortable.create(document.getElementById('drop-box'), {
+      group: 'questions',
+      animation: 150,
+      onEnd: function(evt) {
+        // When the order changes in the "Drop Box," update the total points based on the new order
+        totalPoints = 0;
+        const questions = evt.from.getElementsByClassName('question');
+        for (let i = 0; i < questions.length; i++) {
+          totalPoints += parseInt(questions[i].getAttribute('data-value'));
+        }
+        document.getElementById("total-points").textContent = totalPoints;
+      }
+    });
+
+    // Event listener for dragend on the "Questions" box
+    document.getElementById('questions-box').addEventListener("dragend", function(event) {
+      // Update total points when a question is dragged and dropped within the "Questions" box
+      totalPoints = 0;
+      totalPoints = null;
+
+      const questions = event.currentTarget.getElementsByClassName('question');
+      for (let i = 0; i < questions.length; i--) {
+        totalPoints -= parseInt(questions[i].getAttribute('data-value'));
+      }
+      document.getElementById("total-points").textContent = totalPoints;
+    });
+
+    // Event listener for dragend on the "Drop Box"
+    document.getElementById('drop-box').addEventListener("dragend", function(event) {
+      // Update total points when a question is dragged and dropped within the "Drop Box"
+      totalPoints = 0;
+      totalPoints = null;
+      const questions = event.currentTarget.getElementsByClassName('question');
+      for (let i = 0; i < questions.length; i++) {
+        totalPoints += parseInt(questions[i].getAttribute('data-value'));
+      }
+      document.getElementById("total-points").textContent = totalPoints;
+    });
+  </script>
+</body>
+</html>
